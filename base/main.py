@@ -67,7 +67,15 @@ class IndexStateManagement:
         self.explain_gauge = Gauge(
             name="opendistro_ism_explain",
             documentation="Details got from Opendistro ISM explain API",
-            labelnames=["index", "state"],
+            labelnames=[
+                "index",
+                "state",
+                "rolled_over",
+                "action_name",
+                "action_failed",
+                "retry_failed",
+                "retry_consumed",
+            ],
         )
 
     def fetch_metrics(self):
@@ -83,7 +91,15 @@ class IndexStateManagement:
 
         for name, details in explain_request.json().items():
             if not name.startswith(excluded):
-                self.explain_gauge.labels(name, details["state"]["name"]).set(1.0)
+                self.explain_gauge.labels(
+                    index=name,
+                    state=details["state"]["name"],
+                    rolled_over=details["rolled_over"],
+                    action_name=details["action"]["name"],
+                    action_failed=details["action"]["failed"],
+                    retry_failed=details["retry_info"]["failed"],
+                    retry_consumed=details["retry_info"]["consumed_retries"],
+                ).set(1.0)
 
 
 """
