@@ -18,5 +18,6 @@ build:
 
 run-local:
 	docker run -it --rm \
+	-p 9210:9210 \
 	prometheus-opendistro-exporter \
 	$(extra_args)

@@ -1,3 +1,4 @@
-kubernetes
 docopt
+prometheus_client
 PyYAML
+requests

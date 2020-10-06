@@ -4,16 +4,17 @@ Leverage Opendistro for Elasticsearch APIs to fetch some important data & expose
 
 ## Usage
 
-You should use Docker to run this script for convenience:
+This exporter is meant to be run as a docker container.
+
+To run this exporter locally you can use the following commands:
 
 ```bash
 
-# Build the Docker container first
+# Build the container locally
 make build
 
-# Check the script arguments
-make run-local extra_args='-h'
-
-# This will proceed to delete snapshot if any match is found
-make run-local
+# Run it: granted that you have an Opendistro for Elasticsearch service available on http://localhost:9200 on your workstation
+#
+# Note: the http://host.docker.internal:9200 endpoint is meant to let the container reach your localhost:9200 socket.
+make run-local extra_args='--interval 10 --endpoint http://host.docker.internal:9200'
 ```
