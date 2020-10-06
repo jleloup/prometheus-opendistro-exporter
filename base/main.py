@@ -69,6 +69,7 @@ class IndexStateManagement:
             documentation="Details got from Opendistro ISM explain API",
             labelnames=[
                 "index",
+                "policy_id",
                 "state",
                 "rolled_over",
                 "action_name",
@@ -93,6 +94,7 @@ class IndexStateManagement:
             if not name.startswith(excluded):
                 self.explain_gauge.labels(
                     index=name,
+                    policy_id=details["policy_id"],
                     state=details["state"]["name"],
                     rolled_over=details["rolled_over"],
                     action_name=details["action"]["name"],
