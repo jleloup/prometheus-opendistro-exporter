@@ -49,6 +49,8 @@ HTTP = requests.Session()
 HTTP.mount("https://", ADAPTER)
 HTTP.mount("http://", ADAPTER)
 
+EXCLUDED = (".opendistro", ".kibana", ".apm")
+
 """
 Classes
 """
@@ -88,20 +90,30 @@ class IndexStateManagement:
 
         explain_request = HTTP.get(f"{self.endpoint}/_opendistro/_ism/explain/*")
 
-        excluded = (".opendistro", ".kibana", ".apm")
-
         for name, details in explain_request.json().items():
-            if not name.startswith(excluded):
-                self.explain_gauge.labels(
-                    index=name,
-                    policy_id=details["policy_id"],
-                    state=details["state"]["name"],
-                    rolled_over=details["rolled_over"],
-                    action_name=details["action"]["name"],
-                    action_failed=details["action"]["failed"],
-                    retry_failed=details["retry_info"]["failed"],
-                    retry_consumed=details["retry_info"]["consumed_retries"],
-                ).set(1.0)
+            if name.startswith(EXCLUDED):
+                LOG.debug(
+                    "Rejected index '%s' (reason: name part of the exclusion list)",
+                    name,
+                )
+            else:
+                try:
+                    self.explain_gauge.labels(
+                        index=name,
+                        policy_id=details["policy_id"],
+                        state=details["state"]["name"],
+                        rolled_over=details["rolled_over"],
+                        action_name=details["action"]["name"],
+                        action_failed=details["action"]["failed"],
+                        retry_failed=details["retry_info"]["failed"],
+                        retry_consumed=details["retry_info"]["consumed_retries"],
+                    ).set(1.0)
+                except KeyError as e:
+                    LOG.info(
+                        "Rejected index '%s' (Reason: missing '%s' from ISM explain call)",
+                        name,
+                        e,
+                    )
 
 
 """
@@ -127,6 +139,8 @@ def main():
     ism = IndexStateManagement(endpoint)
 
     start_http_server(listening_port)
+
+    LOG.info("Index exclusion list: %s", EXCLUDED)
 
     while True:
 
