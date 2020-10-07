@@ -3,7 +3,7 @@
 """Prometheus Opendistro exporter
 
 Usage:
-  prometheus-opendistro-exporter [-v | --verbose] [--port=<port>] --interval=<seconds> --endpoint=<opendistro> 
+  prometheus-opendistro-exporter [-v | --verbose] [--port=<port>] [--interval=<seconds>] --endpoint=<opendistro> 
   prometheus-opendistro-exporter (-h | --help)
 
 Options:
@@ -110,7 +110,7 @@ class IndexStateManagement:
                     ).set(1.0)
                 except KeyError as e:
                     LOG.info(
-                        "Rejected index '%s' (Reason: missing '%s' from ISM explain call)",
+                        "Rejected index '%s' (Reason: missing %s from ISM explain call)",
                         name,
                         e,
                     )
