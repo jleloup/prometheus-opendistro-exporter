@@ -3,7 +3,7 @@
 """Prometheus Opendistro exporter
 
 Usage:
-  prometheus-opendistro-exporter [-v | --verbose] [--port=<port>] --interval=<seconds> --endpoint=<opendistro> 
+  prometheus-opendistro-exporter [-v | --verbose] [--port=<port>] [--interval=<seconds>] --endpoint=<opendistro> 
   prometheus-opendistro-exporter (-h | --help)
 
 Options:
@@ -15,6 +15,7 @@ Options:
 """
 
 import json
+from pythonjsonlogger import jsonlogger
 import logging
 import requests
 import time
@@ -28,12 +29,14 @@ from docopt import docopt
 Setup logging & global variables
 """
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(name)s.%(funcName)s +%(lineno)s: %(levelname)-8s [%(process)d] %(message)s",
-)
+logHandler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter("%(message)%(levelname)%(name)%(asctime)")
+logHandler.setFormatter(formatter)
+logging.root.addHandler(logHandler)
 
 LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
+
 
 """
 Requests HTTP helpers
@@ -110,7 +113,7 @@ class IndexStateManagement:
                     ).set(1.0)
                 except KeyError as e:
                     LOG.info(
-                        "Rejected index '%s' (Reason: missing '%s' from ISM explain call)",
+                        "Rejected index '%s' (Reason: missing %s from ISM explain call)",
                         name,
                         e,
                     )
@@ -136,17 +139,21 @@ def main():
     endpoint = arguments["--endpoint"]
     listening_port = int(arguments["--port"])
 
+    LOG.info("Prometheus Opendistro Exporter")
+    LOG.info("Index exclusion list: %s", EXCLUDED)
+    LOG.info("Opendistro endpoint: %s", endpoint)
+    LOG.info("Interval between Opendistro calls: %s", interval)
+    LOG.info("Initialization done")
+
     ism = IndexStateManagement(endpoint)
 
     start_http_server(listening_port)
-
-    LOG.info("Index exclusion list: %s", EXCLUDED)
+    LOG.info("Listening for Prometheus requests on port %i", listening_port)
 
     while True:
 
         ism.fetch_metrics()
 
-        LOG.debug("See you in %s seconds", interval)
         time.sleep(interval)
 
 
