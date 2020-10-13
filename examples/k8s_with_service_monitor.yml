@@ -1,0 +1,52 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: your_code_repository
+    app.kubernetes.io/name: prometheus-opendistro-exporter
+  name: prometheus-opendistro-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: your_code_repository
+      app.kubernetes.io/name: prometheus-opendistro-exporter
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+template:
+  metadata:
+    labels:
+      app.kubernetes.io/managed-by: your_code_repository
+      app.kubernetes.io/name: prometheus-opendistro-exporter
+  spec:
+    containers:
+      - name: prometheus-opendistro-exporter
+        command:
+          - prometheus-opendistro-exporter
+          - --endpoint http://your_es_endpoint:9200
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 9210
+            name: metrics
+            protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: your_code_repository
+    app.kubernetes.io/name: prometheus-opendistro-exporter
+    prometheus: your_prometheus_name
+  name: prometheus-opendistro-exporter
+spec:
+  endpoints:
+    - interval: 30s
+      port: metrics
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: your_code_repository
+      app.kubernetes.io/name: prometheus-opendistro-exporter
